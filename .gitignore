@@ -5,3 +5,5 @@ build/
 Build EXE/
 *.spec
 README.txt
+*.ps1
+*.bat
