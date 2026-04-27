@@ -37,18 +37,28 @@ echo [*] Ajout de tous les fichiers...
 "%GIT_EXE%" add .
 echo [OK] Fichiers ajoutés
 
+REM Vérifier s'il y a des changements indexés
+"%GIT_EXE%" diff --cached --quiet
+set HAS_STAGED_CHANGES=0
+if errorlevel 1 set HAS_STAGED_CHANGES=1
+
 REM Créer le commit
-echo.
-echo [*] Création du commit...
-set /p commitMsg=Entrez le message de commit (ou appuyez sur Entrée): 
-if "%commitMsg%"=="" set commitMsg=Update: Modifications du code
-"%GIT_EXE%" commit -m "%commitMsg%"
-if errorlevel 1 (
-    echo [ERREUR] Echec du commit! Verifiez user.name/user.email et les changements.
-    pause
-    exit /b 1
+if "%HAS_STAGED_CHANGES%"=="1" (
+    echo.
+    echo [*] Création du commit...
+    set /p commitMsg=Entrez le message de commit (ou appuyez sur Entrée): 
+    if "%commitMsg%"=="" set commitMsg=Update: Modifications du code
+    "%GIT_EXE%" commit -m "%commitMsg%"
+    if errorlevel 1 (
+        echo [ERREUR] Echec du commit! Verifiez user.name/user.email.
+        pause
+        exit /b 1
+    )
+    echo [OK] Commit créé
+) else (
+    echo.
+    echo [INFO] Aucun changement a commit. Continuation vers sync/push.
 )
-echo [OK] Commit créé
 
 REM Synchroniser avec le remote avant le push
 echo.
