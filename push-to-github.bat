@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
 REM Script pour pousser le code sur GitHub - Double cliquable
 
 REM Ajouter Git au PATH
@@ -46,9 +47,9 @@ REM Créer le commit
 if "%HAS_STAGED_CHANGES%"=="1" (
     echo.
     echo [*] Création du commit...
-    set /p commitMsg=Entrez le message de commit (ou appuyez sur Entrée): 
-    if "%commitMsg%"=="" set commitMsg=Update: Modifications du code
-    "%GIT_EXE%" commit -m "%commitMsg%"
+    set /p commitMsg=Entrez le message de commit ^(ou appuyez sur Entrée^): 
+    if "!commitMsg!"=="" set commitMsg=Update: Modifications du code
+    "%GIT_EXE%" commit -m "!commitMsg!"
     if errorlevel 1 (
         echo [ERREUR] Echec du commit! Verifiez user.name/user.email.
         pause
