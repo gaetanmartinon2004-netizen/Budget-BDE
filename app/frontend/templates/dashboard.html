@@ -1,0 +1,704 @@
+<!-- Vue Pilotage - Comparaison Prévisionnel vs Réel -->
+<div id="dashboard-view" class="view dashboard-view">
+    <div class="view-header">
+        <h2>📈 Pilotage - Prévisionnel vs Réel</h2>
+        <div class="filters">
+            <button id="dashboard-add-pole" class="btn btn-success">+ Ajouter un Pôle</button>
+            <button id="dashboard-expand-all" class="btn btn-secondary">Tout dérouler</button>
+            <button id="dashboard-collapse-all" class="btn btn-secondary">Tout refermer</button>
+            <button id="dashboard-clear-previs" class="btn btn-danger">Clear prévis</button>
+        </div>
+    </div>
+
+    <div class="dashboard-hint">
+        Cliquez sur une ligne (ou ▶) pour dérouler. Ajoutez vos pôles et catégories directement ici avec <strong>+ Ajouter un Pôle</strong> et le bouton <strong>+</strong> sur chaque ligne. Sur le dernier niveau, vous pouvez modifier <strong>Budget Dépenses</strong> et <strong>Budget Recettes</strong>. Les colonnes Réel sont calculées automatiquement.
+    </div>
+
+    <div class="dashboard-table">
+        <div class="dashboard-table-head">
+            <div class="head-label"></div>
+            <div class="head-actions"></div>
+            <div class="head-group head-group-budget">Prévisionnel</div>
+            <div class="head-group head-group-actual">Réel</div>
+            <div class="head-group head-group-progress">Avancement</div>
+            <div class="head-sub head-sub-budget">Dépenses</div>
+            <div class="head-sub head-sub-budget">Recettes</div>
+            <div class="head-sub head-sub-budget">Total</div>
+            <div class="head-sub head-sub-actual">Dépenses</div>
+            <div class="head-sub head-sub-actual">Recettes</div>
+            <div class="head-sub head-sub-actual">Total</div>
+            <div class="head-sub head-sub-progress">%</div>
+        </div>
+
+        <div id="dashboard-content" class="dashboard-content">
+            <!-- Le contenu sera généré en JS -->
+        </div>
+    </div>
+
+    <div id="category-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Ajouter une catégorie</h3>
+            <form id="category-form">
+                <div class="form-group">
+                    <label for="cat-name">Nom de la catégorie *</label>
+                    <input type="text" id="cat-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Parent :</label>
+                    <input type="hidden" id="cat-parent-id" value="">
+                    <div id="cat-parent-display" class="parent-display">Racine (Pôle)</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('category-modal').style.display='none'">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="pole-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Modifier le pôle</h3>
+            <form id="pole-form">
+                <input type="hidden" id="pole-id" value="">
+
+                <div class="form-group">
+                    <label for="pole-name">Nom du pôle *</label>
+                    <input type="text" id="pole-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="pole-color">Couleur du pôle *</label>
+                    <input type="color" id="pole-color" value="#83c9ff" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <button type="button" id="cancel-pole-btn" class="btn btn-secondary">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-view {
+    padding: 20px;
+}
+
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.view-header h2 {
+    margin: 0;
+}
+
+.dashboard-view .view-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: linear-gradient(180deg, rgba(20, 38, 66, 0.96) 0%, rgba(14, 28, 50, 0.96) 100%);
+    backdrop-filter: blur(4px);
+    margin: -6px -6px 14px -6px;
+    padding: 14px 12px;
+    border-radius: 10px;
+}
+
+.filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.dashboard-content {
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+}
+
+.dashboard-table {
+    background: linear-gradient(180deg, rgba(28, 52, 86, 0.88) 0%, rgba(22, 43, 74, 0.9) 100%);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
+    font-variant-numeric: tabular-nums lining-nums;
+}
+
+.dashboard-table * {
+    font-family: inherit;
+}
+
+.dashboard-table-head {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 68px repeat(6, minmax(95px, 120px)) minmax(130px, 160px);
+    align-items: stretch;
+    border-bottom: 2px solid rgba(159, 208, 255, 0.45);
+}
+
+.head-label,
+.head-actions,
+.head-group,
+.head-sub {
+    padding: 9px 10px;
+    font-size: 0.83em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+    border-right: 1px solid rgba(159, 208, 255, 0.14);
+}
+
+.head-label,
+.head-actions {
+    grid-row: 1 / span 2;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+}
+
+.head-group {
+    text-align: center;
+}
+
+.head-group-budget,
+.head-sub-budget {
+    background: linear-gradient(180deg, rgba(65, 170, 255, 0.28) 0%, rgba(33, 150, 243, 0.16) 100%);
+    color: #d6ecff;
+}
+
+.head-group-actual,
+.head-sub-actual {
+    background: linear-gradient(180deg, rgba(84, 188, 102, 0.28) 0%, rgba(76, 175, 80, 0.16) 100%);
+    color: #dbf8dc;
+}
+
+.head-group-progress,
+.head-sub-progress {
+    background: linear-gradient(180deg, rgba(255, 184, 96, 0.3) 0%, rgba(255, 152, 0, 0.16) 100%);
+    color: #fff0cf;
+}
+
+.head-group-budget {
+    grid-column: 3 / span 3;
+}
+
+.head-group-actual {
+    grid-column: 6 / span 3;
+}
+
+.head-group-progress {
+    grid-column: 9 / span 1;
+}
+
+.dashboard-hint {
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.dashboard-hint strong {
+    color: var(--text-primary);
+}
+
+.budget-node {
+    border-bottom: 1px solid rgba(159, 208, 255, 0.2);
+    background: rgba(12, 28, 52, 0.22);
+}
+
+.budget-node.root-node > .node-header {
+    background: linear-gradient(180deg, rgba(111, 187, 255, 0.3) 0%, rgba(79, 158, 237, 0.2) 100%);
+    border-top: 1px solid rgba(190, 226, 255, 0.44);
+    border-bottom: 1px solid rgba(190, 226, 255, 0.26);
+}
+
+.budget-node.root-node:nth-of-type(odd) > .node-header {
+    background: linear-gradient(180deg, rgba(116, 193, 255, 0.34) 0%, rgba(83, 163, 243, 0.22) 100%);
+}
+
+.budget-node.root-node:nth-of-type(even) > .node-header {
+    background: linear-gradient(180deg, rgba(95, 179, 252, 0.32) 0%, rgba(76, 155, 242, 0.2) 100%);
+}
+
+.budget-node.root-node {
+    margin-top: 10px;
+    border: 1px solid rgba(159, 208, 255, 0.28);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header {
+    border-left: 6px solid var(--pole-band, #d6ecff);
+    background: var(--pole-bg, linear-gradient(180deg, rgba(145, 196, 244, 0.52) 0%, rgba(118, 173, 226, 0.4) 100%));
+}
+
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header .node-name,
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header .budget,
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header .actual,
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header .budget-col,
+.budget-node.root-node[class*='dashboard-pole-theme-'] > .node-header .actual-col {
+    color: var(--pole-text, #0d2238);
+}
+
+.budget-node.root-node.dashboard-pole-theme-pilot {
+    --pole-band: #d6ecff;
+    --pole-bg: linear-gradient(180deg, rgba(145, 196, 244, 0.9) 0%, rgba(118, 173, 226, 0.8) 100%);
+    --pole-text: #0d2238;
+}
+
+.budget-node.root-node.dashboard-pole-theme-event {
+    --pole-band: #f0d9ff;
+    --pole-bg: linear-gradient(180deg, rgba(205, 172, 212, 0.9) 0%, rgba(184, 147, 194, 0.8) 100%);
+    --pole-text: #2b1436;
+}
+
+.budget-node.root-node.dashboard-pole-theme-com {
+    --pole-band: #ffe3b8;
+    --pole-bg: linear-gradient(180deg, rgba(255, 174, 72, 0.94) 0%, rgba(245, 153, 41, 0.84) 100%);
+    --pole-text: #3a1800;
+}
+
+.budget-node.root-node.dashboard-pole-theme-art {
+    --pole-band: #f1e7cf;
+    --pole-bg: linear-gradient(180deg, rgba(205, 193, 166, 0.9) 0%, rgba(186, 171, 137, 0.8) 100%);
+    --pole-text: #2b2111;
+}
+
+.budget-node.root-node.dashboard-pole-theme-huma {
+    --pole-band: #fff3be;
+    --pole-bg: linear-gradient(180deg, rgba(248, 226, 126, 0.92) 0%, rgba(233, 205, 99, 0.82) 100%);
+    --pole-text: #2a1f00;
+}
+
+.budget-node.root-node.dashboard-pole-theme-ddrs {
+    --pole-band: #e5f1c6;
+    --pole-bg: linear-gradient(180deg, rgba(175, 196, 121, 0.9) 0%, rgba(154, 177, 103, 0.8) 100%);
+    --pole-text: #18280f;
+}
+
+.budget-node.root-node.dashboard-pole-theme-lignes {
+    --pole-band: #f4eee0;
+    --pole-bg: linear-gradient(180deg, rgba(223, 217, 205, 0.9) 0%, rgba(205, 196, 177, 0.8) 100%);
+    --pole-text: #2b261d;
+}
+
+.budget-node.root-node.dashboard-pole-theme-sport {
+    --pole-band: #efe3ff;
+    --pole-bg: linear-gradient(180deg, rgba(102, 68, 180, 0.94) 0%, rgba(74, 50, 149, 0.86) 100%);
+    --pole-text: #f4ecff;
+}
+
+.budget-node.root-node.dashboard-pole-theme-kfet {
+    --pole-band: #d8eee8;
+    --pole-bg: linear-gradient(180deg, rgba(161, 201, 190, 0.9) 0%, rgba(140, 183, 171, 0.8) 100%);
+    --pole-text: #10241f;
+}
+
+.budget-node.root-node.dashboard-pole-theme-default {
+    --pole-band: #d6ecff;
+    --pole-bg: linear-gradient(180deg, rgba(145, 196, 244, 0.9) 0%, rgba(118, 173, 226, 0.8) 100%);
+    --pole-text: #0d2238;
+}
+
+.dashboard-total-node > .node-header {
+    background: rgba(110, 182, 255, 0.26);
+    border-left: 4px solid #9fd0ff;
+    cursor: default;
+}
+
+.dashboard-total-node > .node-header:hover {
+    background: rgba(110, 182, 255, 0.26);
+}
+
+.dashboard-total-node .node-name {
+    font-weight: 800;
+}
+
+.node-header {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 68px repeat(6, minmax(95px, 120px)) minmax(130px, 160px);
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(159, 208, 255, 0.12);
+}
+
+.node-header:hover {
+    background: rgba(173, 214, 255, 0.2);
+}
+
+.dashboard-content > .budget-node:nth-child(odd):not(.dashboard-total-node):not(.root-node) > .node-header {
+    background: rgba(120, 185, 245, 0.08);
+}
+
+.dashboard-content > .budget-node:nth-child(even):not(.dashboard-total-node):not(.root-node) > .node-header {
+    background: rgba(102, 171, 236, 0.14);
+}
+
+.node-header.status-good {
+    border-left: 4px solid #4CAF50;
+}
+
+.node-header.status-warning {
+    border-left: 4px solid #FF9800;
+}
+
+.node-header.status-danger {
+    border-left: 4px solid #F44336;
+}
+
+.node-label-cell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+    transition: transform 0.3s;
+    min-width: 16px;
+}
+
+.expand-btn.open {
+    transform: rotate(90deg);
+}
+
+.node-name {
+    font-weight: 700;
+    padding: 10px 10px;
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.root-node > .node-header .node-name {
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.dashboard-node-actions {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+}
+
+.dashboard-add-node {
+    border: none;
+    background: rgba(76, 175, 80, 0.18);
+    color: var(--text-primary);
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dashboard-add-node:hover {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+.dashboard-edit-pole {
+    border: none;
+    background: rgba(255, 184, 96, 0.18);
+    color: var(--text-primary);
+    font-weight: 800;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dashboard-edit-pole:hover {
+    background: rgba(255, 184, 96, 0.32);
+}
+
+.dashboard-delete-node {
+    border: none;
+    background: rgba(244, 67, 54, 0.18);
+    color: var(--text-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dashboard-delete-node:hover {
+    background: rgba(244, 67, 54, 0.3);
+}
+
+.node-values {
+    display: contents;
+    font-size: 0.9em;
+}
+
+.budget, .actual {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.budget-col,
+.actual-col {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    padding: 10px 10px;
+    white-space: nowrap;
+    background: transparent;
+    border-left: none;
+}
+
+/* 1: Budget depenses, 2: Budget recettes, 3: Budget total,
+   4: Reel depenses, 5: Reel recettes, 6: Reel total */
+.node-values > .budget-col:nth-child(1),
+.node-values > .actual-col:nth-child(4) {
+    color: var(--flow-expense-text-strong);
+    font-weight: 800;
+    background: transparent;
+    border-left: none;
+}
+
+.node-values > .budget-col:nth-child(2),
+.node-values > .actual-col:nth-child(5) {
+    color: var(--flow-income-text-strong);
+    font-weight: 800;
+    background: transparent;
+    border-left: none;
+}
+
+.node-values > .budget-col:nth-child(3),
+.node-values > .actual-col:nth-child(6) {
+    background: transparent;
+    border-left: none;
+}
+
+.budget-total,
+.actual-total {
+    font-weight: 800;
+}
+
+.budget-total.is-positive,
+.actual-total.is-positive {
+    color: var(--flow-income-text-strong);
+}
+
+.budget-total.is-negative,
+.actual-total.is-negative {
+    color: var(--flow-expense-text-strong);
+}
+
+.node-values > .budget-col:nth-child(1) .budget,
+.node-values > .budget-col:nth-child(1) .budget-edit {
+    color: var(--flow-expense-text-strong);
+    font-weight: 800;
+}
+
+.node-values > .budget-col:nth-child(2) .budget,
+.node-values > .budget-col:nth-child(2) .budget-edit {
+    color: var(--flow-income-text-strong);
+    font-weight: 800;
+}
+
+.progress-col {
+    padding: 8px 10px;
+    background: rgba(255, 188, 86, 0.12);
+}
+
+.progress-chip {
+    display: inline-block;
+    min-width: 58px;
+    text-align: center;
+    font-size: 0.84em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+}
+
+.progress-chip.progress-low {
+    color: #ffd08a;
+    background: rgba(255, 152, 0, 0.2);
+}
+
+.progress-chip.progress-ok {
+    color: #98e09a;
+    background: rgba(76, 175, 80, 0.2);
+}
+
+.progress-chip.progress-over {
+    color: #ff9f9f;
+    background: rgba(244, 67, 54, 0.2);
+}
+
+.progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.progress-fill.progress-low {
+    background: linear-gradient(90deg, #ffb347 0%, #ffcc80 100%);
+}
+
+.progress-fill.progress-ok {
+    background: linear-gradient(90deg, #4CAF50 0%, #8bc34a 100%);
+}
+
+.progress-fill.progress-over {
+    background: linear-gradient(90deg, #ef5350 0%, #ff8a80 100%);
+}
+
+.budget-col .budget,
+.budget-col .budget-edit {
+    justify-self: end;
+}
+
+.budget-edit {
+    border: 1px dashed rgba(159, 208, 255, 0.35);
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.budget-edit:hover {
+    background: rgba(159, 208, 255, 0.1);
+}
+
+.budget-readonly {
+    opacity: 0.9;
+    cursor: default;
+}
+
+.budget-edit-input {
+    width: 100%;
+    max-width: 120px;
+    padding: 4px 8px;
+    border: 1px solid var(--accent-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.node-children {
+    background: linear-gradient(180deg, rgba(39, 68, 104, 0.42) 0%, rgba(27, 49, 78, 0.5) 100%);
+    border-top: 1px solid rgba(159, 208, 255, 0.18);
+}
+
+.node-children .budget-node {
+    border-bottom: 1px solid rgba(159, 208, 255, 0.18);
+}
+
+.node-children .budget-node:nth-child(odd) > .node-header {
+    background: rgba(118, 182, 245, 0.1);
+}
+
+.node-children .budget-node:nth-child(even) > .node-header {
+    background: rgba(104, 170, 236, 0.16);
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-content h3 {
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.parent-display {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-table {
+        overflow-x: auto;
+    }
+
+    .dashboard-table-head,
+    .node-header {
+        min-width: 1130px;
+    }
+}
+</style>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDE Trésorerie - Pilotage par Mandat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header avec navigation -->
+        <header class="main-header">
+            <div class="header-content">
+                <h1>📊 BDE Trésorerie</h1>
+                <nav class="main-nav">
+                    <a href="#" data-view="dashboard" class="nav-link active">Pilotage</a>
+                    <a href="#" data-view="transactions" class="nav-link">Transactions</a>
+                </nav>
+            </div>
+            <div class="mandat-selector">
+                <button id="current-mandat-btn" class="btn btn-secondary" type="button">Mandat: Chargement...</button>
+            </div>
+        </header>
+
+        <!-- Zone de contenu principal -->
+        <main id="content" class="main-content">
+            <!-- Les vues seront chargées ici dynamiquement -->
+        </main>
+
+        <!-- Toast notifications -->
+        <div id="toast" class="toast"></div>
+
+        <div id="mandat-manager-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Gestion des mandats</h3>
+                <div class="form-group">
+                    <label for="mandat-select">Liste des mandats</label>
+                    <select id="mandat-select" size="8">
+                        <option value="">Chargement...</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button id="use-mandat-btn" class="btn btn-primary" type="button">Utiliser</button>
+                    <button id="new-mandat-btn" class="btn btn-success" type="button">+ Ajouter</button>
+                    <button id="edit-mandat-btn" class="btn btn-secondary" type="button">Modifier</button>
+                    <button id="delete-mandat-btn" class="btn btn-danger" type="button">Supprimer</button>
+                    <button id="close-mandat-manager-btn" class="btn btn-secondary" type="button">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mandat-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3 id="mandat-modal-title">Créer un mandat</h3>
+                <form id="mandat-form">
+                    <div class="form-group">
+                        <label for="mandat-name">Nom du BDE / mandat *</label>
+                        <input type="text" id="mandat-name" placeholder="Ex: BDE Builders 2026" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mandat-date-debut">Date de début *</label>
+                            <input type="date" id="mandat-date-debut" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="mandat-date-fin">Date de fin *</label>
+                            <input type="date" id="mandat-date-fin" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Créer</button>
+                        <button type="button" id="cancel-mandat-btn" class="btn btn-secondary">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Initialiser l'application au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            App.init();
+        });
+    </script>
+</body>
+</html>
