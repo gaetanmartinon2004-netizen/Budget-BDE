@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -302,17 +301,15 @@ def create_app() -> Bottle:
             if uploads:
                 pole_name = services.get_top_pole_name(
                     mandat_id=mandat_id,
-                    node_id=int(trans.get("node_id")) if trans.get("node_id") is not None else None,
+                    node_id=int(data.get("node_id")) if data.get("node_id") else None,
                 )
                 mandat_name = services.get_mandat_name(mandat_id)
-
                 for upload in uploads:
                     if not upload or not upload.filename:
                         continue
-
                     relative_path = save_justificatif(
                         mandat_id=mandat_id,
-                        transaction_id=int(trans["id"]),
+                        transaction_id=transaction_id,
                         file_obj=upload.file,
                         filename=upload.filename,
                         mandat_name=mandat_name,
@@ -322,14 +319,14 @@ def create_app() -> Bottle:
                     )
                     attachment = services.add_attachment(
                         mandat_id=mandat_id,
-                        transaction_id=int(trans["id"]),
+                        transaction_id=transaction_id,
                         file_path=relative_path,
                     )
                     attachments.append(attachment)
 
             result = services.get_transaction(mandat_id, int(trans["id"]))
             if attachments:
-                result["attachments"] = result.get("attachments", [])
+                result["attachments"] = attachments
             return result
         except Exception as e:
             response.status = 400
@@ -425,9 +422,9 @@ def create_app() -> Bottle:
             if sys.platform.startswith("win"):
                 os.startfile(str(folder_path))
             elif sys.platform == "darwin":
-                subprocess.Popen(["open", str(folder_path)])
+                os.system(f"open '{folder_path}'")
             else:
-                subprocess.Popen(["xdg-open", str(folder_path)])
+                os.system(f"xdg-open '{folder_path}'")
 
             return {"success": True, "folder": str(folder_path)}
         except Exception as e:
