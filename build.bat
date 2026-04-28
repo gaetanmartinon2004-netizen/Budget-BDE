@@ -131,5 +131,13 @@ if exist "justificatifs" (
     )
 )
 
-echo Build complete!
-echo Distribution available in %DIST_DIR%
+REM Success message
+echo.
+echo ============================================
+echo   BUILD SUCCESSFULLY COMPLETED!
+echo ============================================
+echo.
+echo Executable: %EXE_PATH%
+echo Distribution folder: %DIST_DIR%
+echo.
+pause
