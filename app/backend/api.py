@@ -7,7 +7,6 @@ from pathlib import Path
 from bottle import Bottle, static_file, request, response
 
 from . import services
-from .database import initialize_database
 from .justificatifs import safe_path_segment, save_justificatif
 from .paths import get_app_root, justificatifs_root
 
@@ -16,9 +15,6 @@ def create_app() -> Bottle:
     """Create and configure Bottle app."""
     app = Bottle()
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key-local")
-    
-    # Initialize database on startup
-    initialize_database()
     
     # ===== STATIC & TEMPLATES =====
     

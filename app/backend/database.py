@@ -37,8 +37,9 @@ def _initialize_postgres_database(database_url: str):
         print("[DB] ✅ Tables created successfully")
         
     except Exception as e:
-        print(f"[DB] ❌ Error initializing PostgreSQL: {e}")
-        raise
+        print(f"[DB] ⚠️  Could not initialize PostgreSQL at startup: {e}")
+        print("[DB] Application will continue, but database operations may fail")
+        # Don't raise - allow app to start anyway
 
 
 def _create_postgres_schema(cursor):
