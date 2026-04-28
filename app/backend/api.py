@@ -8,8 +8,8 @@ from bottle import Bottle, static_file, request, response
 
 from . import services
 from .database import initialize_database
-from .justificatifs import safe_path_segment, save_justificatif, justificatifs_root
-from .paths import get_app_root
+from .justificatifs import safe_path_segment, save_justificatif
+from .paths import get_app_root, justificatifs_root
 
 
 def create_app() -> Bottle:

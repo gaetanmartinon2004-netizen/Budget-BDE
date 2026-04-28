@@ -7,7 +7,6 @@ Build EXE/
 README.txt
 *.ps1
 *.bat
-.git/
-push-to-github.bat
-build.bat
 data/
+justificatifs/
+*.db
