@@ -11,9 +11,14 @@ from app.backend.database import initialize_database
 
 app = create_app()
 
+# Initialize database at module load time
+# This ensures it runs with Gunicorn (which never enters the if __name__ block)
+print("[MAIN] Initializing database at module load time...")
+initialize_database()
+print("[MAIN] Database initialization complete")
+
 
 def main() -> None:
-    initialize_database()
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))
     app.run(host=host, port=port)
